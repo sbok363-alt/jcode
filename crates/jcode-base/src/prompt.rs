@@ -1004,6 +1004,26 @@ pub fn load_agents_md_files_from_dir(working_dir: Option<&Path>) -> (Option<Stri
     load_agents_md_files_from_dirs(project_dir, global_agents_md.as_deref())
 }
 
+/// Load a global prompt overlay that should apply only to root/top-level sessions.
+///
+/// This intentionally has no project-local counterpart. Root-only bootstraps are
+/// commonly used to activate global workflow systems, and loading a repository-
+/// controlled root overlay would widen Jcode's existing workspace-trust surface.
+pub fn load_root_prompt_overlay() -> Option<String> {
+    let path = crate::storage::jcode_dir()
+        .ok()?
+        .join("root-prompt-overlay.md");
+    let content = std::fs::read_to_string(path).ok()?;
+    let trimmed = content.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "# Root Session Prompt Overlay (~/.jcode/root-prompt-overlay.md)\n\n{trimmed}"
+        ))
+    }
+}
+
 /// Load optional prompt overlay markdown from ~/.jcode/ and ./.jcode/
 fn load_prompt_overlay_files_from_dir(working_dir: Option<&Path>) -> (Option<String>, usize) {
     let mut contents = vec![];
