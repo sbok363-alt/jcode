@@ -6,8 +6,8 @@ use std::process::{Command as ProcessCommand, Stdio};
 use std::time::Instant;
 
 use super::args::{
-    AmbientCommand, Args, AuthCommand, CloudCommand, CloudSessionsCommand, Command, MemoryCommand,
-    ModelCommand, ProviderCommand, RestartCommand, ServerCommand, SessionCommand,
+    AmbientCommand, Args, AuthCommand, CloudCommand, CloudSessionsCommand, Command, McpCommand,
+    MemoryCommand, ModelCommand, ProviderCommand, RestartCommand, ServerCommand, SessionCommand,
     TranscriptModeArg,
 };
 use crate::{
@@ -366,6 +366,10 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             commands::run_usage_command(json).await?;
         }
         Some(Command::Telemetry(action)) => super::telemetry::run(action)?,
+        Some(Command::Mcp { action }) => match action {
+            McpCommand::Trust { path, yes } => commands::run_mcp_trust_command(path, yes)?,
+            McpCommand::Revoke { path } => commands::run_mcp_revoke_command(path)?,
+        },
         Some(Command::SelfDev { build }) => {
             selfdev::run_self_dev(build, args.resume).await?;
         }
