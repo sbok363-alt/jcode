@@ -1024,6 +1024,23 @@ pub fn load_root_prompt_overlay() -> Option<String> {
     }
 }
 
+/// Append the global root-session overlay to an already assembled prompt.
+///
+/// Child/subagent sessions deliberately never receive this content. Keeping the
+/// policy here ensures every frontend applies the same root/child boundary.
+pub fn append_root_prompt_overlay(split: &mut SplitSystemPrompt, is_root_session: bool) {
+    if !is_root_session {
+        return;
+    }
+    let Some(root_overlay) = load_root_prompt_overlay() else {
+        return;
+    };
+    if !split.static_part.is_empty() {
+        split.static_part.push_str("\n\n");
+    }
+    split.static_part.push_str(&root_overlay);
+}
+
 /// Load optional prompt overlay markdown from ~/.jcode/ and ./.jcode/
 fn load_prompt_overlay_files_from_dir(working_dir: Option<&Path>) -> (Option<String>, usize) {
     let mut contents = vec![];
