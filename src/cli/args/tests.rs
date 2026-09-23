@@ -150,7 +150,6 @@ fn telemetry_subcommands_parse() {
     ));
 }
 
-
 #[test]
 fn mcp_trust_subcommands_parse() {
     let trust = Args::try_parse_from(["jcode", "mcp", "trust", "/tmp/project", "--yes"])
