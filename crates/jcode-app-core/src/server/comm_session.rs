@@ -66,6 +66,7 @@ async fn client_terminal_env_for_session(
 
 fn create_visible_spawn_session(
     working_dir: Option<&str>,
+    parent_session_id: Option<&str>,
     model_override: Option<&str>,
     provider_key_override: Option<&str>,
     route_api_method_override: Option<&str>,
@@ -76,7 +77,7 @@ fn create_visible_spawn_session(
         .map(PathBuf::from)
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
-    let mut session = Session::create(None, None);
+    let mut session = Session::create(parent_session_id.map(str::to_string), None);
     session.working_dir = Some(cwd.display().to_string());
     if let Some(model) = model_override {
         session.model = Some(model.to_string());
@@ -430,6 +431,7 @@ fn cleanup_prepared_visible_spawn_session(session_id: &str) {
 #[allow(clippy::too_many_arguments)]
 fn prepare_visible_spawn_session<F>(
     working_dir: Option<&str>,
+    parent_session_id: Option<&str>,
     model_override: Option<&str>,
     provider_key_override: Option<&str>,
     route_api_method_override: Option<&str>,
@@ -444,6 +446,7 @@ where
     let provider_key = provider_key_for_spawn_model(model_override, provider_key_override);
     let (new_session_id, cwd) = create_visible_spawn_session(
         working_dir,
+        parent_session_id,
         model_override,
         provider_key.as_deref(),
         route_api_method_override,
@@ -647,6 +650,7 @@ pub(super) async fn spawn_swarm_agent(
         }
         SwarmSpawnMode::Visible | SwarmSpawnMode::Auto => prepare_visible_spawn_session(
             resolved_working_dir.as_deref(),
+            Some(req_session_id),
             spawn_model.as_deref(),
             spawn_provider_key.as_deref(),
             spawn_route_api_method.as_deref(),

@@ -42,6 +42,51 @@ fn mermaid_prompt_module_follows_capability() {
 
 /// Verify skill prompts don't accidentally introduce "Claude Code" identity
 #[test]
+fn root_prompt_overlay_applies_only_to_root_sessions() {
+    let _guard = crate::storage::lock_test_env();
+    let previous_home = std::env::var_os("JCODE_HOME");
+    let home = tempfile::TempDir::new().unwrap();
+    crate::env::set_var("JCODE_HOME", home.path());
+    std::fs::write(
+        home.path().join("root-prompt-overlay.md"),
+        "root workflow bootstrap",
+    )
+    .unwrap();
+
+    let mut root = SplitSystemPrompt {
+        static_part: "base".to_string(),
+        dynamic_part: String::new(),
+    };
+    append_root_prompt_overlay(&mut root, true);
+    assert!(root.static_part.contains("root workflow bootstrap"));
+    assert!(
+        root.static_part
+            .contains("Root Session Prompt Overlay (~/.jcode/root-prompt-overlay.md)")
+    );
+
+    let mut child = SplitSystemPrompt {
+        static_part: "base".to_string(),
+        dynamic_part: String::new(),
+    };
+    append_root_prompt_overlay(&mut child, false);
+    assert_eq!(child.static_part, "base");
+
+    std::fs::write(home.path().join("root-prompt-overlay.md"), "   \n").unwrap();
+    let mut empty = SplitSystemPrompt {
+        static_part: "base".to_string(),
+        dynamic_part: String::new(),
+    };
+    append_root_prompt_overlay(&mut empty, true);
+    assert_eq!(empty.static_part, "base");
+
+    if let Some(previous_home) = previous_home {
+        crate::env::set_var("JCODE_HOME", previous_home);
+    } else {
+        crate::env::remove_var("JCODE_HOME");
+    }
+}
+
+#[test]
 fn test_skill_prompt_integration() {
     // Test that a skill prompt is properly appended and doesn't break anything
     let skill_prompt = "You are helping with a debugging task.";
