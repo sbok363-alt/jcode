@@ -34,6 +34,14 @@ impl App {
             memory_prompt,
             None,
         );
+        if self.session.parent_id.is_none()
+            && let Some(root_overlay) = crate::prompt::load_root_prompt_overlay()
+        {
+            if !split.static_part.is_empty() {
+                split.static_part.push_str("\n\n");
+            }
+            split.static_part.push_str(&root_overlay);
+        }
         self.append_current_turn_system_reminder(&mut split);
         crate::prompt::append_swarm_effort_directive(
             &mut split,
