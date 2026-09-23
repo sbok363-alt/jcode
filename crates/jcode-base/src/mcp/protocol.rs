@@ -679,10 +679,7 @@ impl McpConfig {
             let project_server_names: std::collections::HashSet<_> =
                 project_config.servers.keys().cloned().collect();
             let mut candidate = merged.clone();
-            Self::merge_servers_preferring_runnable(
-                &mut candidate.servers,
-                project_config.servers,
-            );
+            Self::merge_servers_preferring_runnable(&mut candidate.servers, project_config.servers);
             candidate.expand_environment_variables();
             let review_config = Self {
                 servers: candidate
