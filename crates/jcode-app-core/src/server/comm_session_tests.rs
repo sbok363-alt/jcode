@@ -250,6 +250,7 @@ fn prepare_visible_spawn_session_persists_startup_before_launch() {
 
     let (session_id, launched) = prepare_visible_spawn_session(
         Some(worktree.path().to_str().expect("utf8 worktree path")),
+        Some("coordinator-session"),
         None,
         None,
         None,
@@ -276,6 +277,13 @@ fn prepare_visible_spawn_session_persists_startup_before_launch() {
     .expect("visible spawn preparation should succeed");
 
     assert!(launched);
+    let prepared = crate::session::Session::load(&session_id)
+        .expect("visible swarm session should persist");
+    assert_eq!(
+        prepared.parent_id.as_deref(),
+        Some("coordinator-session"),
+        "visible swarm workers must remain child sessions"
+    );
     let path = crate::storage::jcode_dir()
         .expect("jcode dir")
         .join(format!("client-input-{}", session_id));
@@ -297,6 +305,7 @@ fn prepare_visible_spawn_session_cleans_startup_when_launch_not_started() {
 
     let (session_id, launched) = prepare_visible_spawn_session(
         Some(worktree.path().to_str().expect("utf8 worktree path")),
+        None,
         None,
         None,
         None,
@@ -337,6 +346,7 @@ fn prepare_visible_spawn_session_cleans_session_when_launch_errors() {
         None,
         None,
         None,
+        None,
         false,
         Some("Do the thing."),
         |_session_id, _cwd: &std::path::Path, _selfdev, _provider_key| {
@@ -369,6 +379,7 @@ fn prepare_visible_spawn_session_persists_and_launches_provider_key_for_openrout
     let worktree = tempfile::TempDir::new().expect("temp worktree");
     let (session_id, launched) = prepare_visible_spawn_session(
         Some(worktree.path().to_str().expect("utf8 worktree path")),
+        None,
         Some("openai/gpt-5.4@OpenAI"),
         None,
         None,
@@ -399,6 +410,7 @@ fn prepare_visible_spawn_session_persists_requested_effort() {
     let worktree = tempfile::TempDir::new().expect("temp worktree");
     let (session_id, launched) = prepare_visible_spawn_session(
         Some(worktree.path().to_str().expect("utf8 worktree path")),
+        None,
         Some("gpt-5.5"),
         None,
         None,
@@ -430,6 +442,7 @@ fn prepare_visible_spawn_session_prefers_parent_provider_key_over_model_guess() 
     let worktree = tempfile::TempDir::new().expect("temp worktree");
     let (session_id, launched) = prepare_visible_spawn_session(
         Some(worktree.path().to_str().expect("utf8 worktree path")),
+        None,
         Some("gpt-5.4"),
         Some("ollama"),
         None,
